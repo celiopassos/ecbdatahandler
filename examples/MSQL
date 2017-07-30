@@ -1,0 +1,30 @@
+[general]
+names = medicao_m3, medicao_ton, combustivel
+
+[medicao_m3]
+type = medicao
+files = Terras.xlsx:Transporte de m³
+table = medicao_m3
+
+[medicao_ton]
+type = medicao
+files = CCR_ton.xlsx:CCR, CCP_ton.xlsx:CCP, BGTC_ton.xlsx:BGTC, BICA_CORRIDA_ton.xlsx:BICA CORRIDA
+table = medicao_ton
+
+[combustivel]
+type = combustivel
+files = Combustivel.xlsx:Plan1
+table = combustivel
+
+[global_filters]
+start_date = 2017-06-01
+end_date = 2017-06-15
+
+[global_tags]
+period = 2017-06:1
+
+[mysql]
+user=celio
+password=itfull01
+database=ecb
+server=localhost

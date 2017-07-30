@@ -1,0 +1,47 @@
+[global_filters]
+period = 2017-06:1
+
+[medicao]
+names = medicao_m3, medicao_ton
+columns = Data:7, CA:5, Placa:6, Motorista:25, Qtd.:4, Unid.:5, Preço:6, MATERIAL:25, KM Inicial:9, KM Final:9, Retorno:8, Parte Diária:10, Estaca:6, Acerto:6, Valorização:20
+
+[combustivel]
+names = combustivel_
+columns = Data, Combustível, Qtd., Preço, Total
+
+# TABLES
+
+[medicao_m3]
+table = medicao_m3
+type = m3
+not_null = cacamba_no, placa, data
+rename = m3:qtd, m3xpuxkm:preco, cacamba_no:ca, total_kms_parte_diaria:parte_diaria, total_km_estaca:estaca
+price = material_pack_1:0.48
+null_price_map = 0.56:0.48, 0.40:0.34
+
+[medicao_ton]
+table = medicao_ton
+type = ton
+not_null = cacamba_no, placa, data
+rename = ton:qtd, tonxpuxkm:preco, cacamba_no:ca, total_kms_parte_diaria:parte_diaria, total_km_estaca:estaca
+price = material_pack_2:0.34
+null_price_map = 0.56:0.48, 0.40:0.34
+
+[combustivel_]
+table = combustivel
+not_null = placa
+rename = tipo_de_combustivel:combustivel
+price = combustivel_pack_1:2.7924
+
+[packs]
+material_pack_1 = REBAIXAMENTO RAMO A BARÃO, SMT - ARGILA, SMT - ASFALTO, SMT - BOTA FORA, SMT - LIMPEZA, SMT - PEDRA, SMT - Siltis, SMT - TERRA, TRANSPORTE DE MATERIAIS - SILTIS, Transporte de Material - Asfalto demolido, Transporte de Material - Barro/Argila, Transporte de Material - Bica Corrida, Transporte de Material - Bota fora, Transporte de Material - Brita, Transporte de Material - Brita 1, Transporte de Material - Brita 2, Transporte de Material - CCR, Transporte de Material - Limpeza, Transporte de Material - Pedra, Transporte de Material - Pó de Pedra, Transporte de Material - Rebaixo, Transporte de Material - SILTE, Transporte de Material - Terra, Transporte de Material - Terra + Pedra, Transporte de Material -Siltis, Transporte de Material - BRITA 2, Transporte de Material - BICA CORRIDA, Transporte de Material - BRITA 1
+
+material_pack_2 = Transporte de Material - BGTC, Transporte de Material - BICA CORRIDA, Transporte de Material - CCR, Transporte de Material - CONCRETO, Transporte de Material - SILTE
+
+combustivel_pack_1 = DIESEL S10
+
+[mysql]
+user=celio
+password=itfull01
+database=ecb
+server=localhost

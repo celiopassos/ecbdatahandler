@@ -1,0 +1,8 @@
+.project
+.ropeproject
+tags
+
+*.pyc
+*.egg-info
+virtualenv
+examples/*

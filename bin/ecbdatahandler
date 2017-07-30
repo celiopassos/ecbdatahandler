@@ -1,0 +1,40 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import argparse
+
+from ecbdatahandler import ECBtoSQL, MountSQL
+
+
+try:
+    handler = {
+        'upload': ECBtoSQL,
+        'mount': MountSQL
+    }[sys.argv[1]]
+except KeyError:
+    print('Unknown action {0}'.format(sys.argv[1]))
+    sys.exit(1)
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument(
+    '-m',
+    action='store',
+    dest='info_file',
+    type=str,
+    help='the config file'
+)
+
+args, _ = parser.parse_known_args()
+
+assert os.path.exists(args.info_file)
+
+datahandler = handler(args.info_file)
+datahandler.load()
+
+if handler == ECBtoSQL:
+    datahandler.to_sql()
+elif handler == MountSQL:
+    datahandler.mount()
+    datahandler.export_resumo_geral()

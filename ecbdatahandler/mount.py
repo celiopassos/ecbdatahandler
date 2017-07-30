@@ -103,7 +103,9 @@ class CA:
         writer.save()
 
     def export_resumo(self, output_folder, columns):
-        with open('{0}/{1}.txt'.format(output_folder, self.ca), 'w') as resumo:
+        filename = '{0}/{1}.txt'.format(output_folder, self.ca)
+
+        with open(filename, 'w') as resumo:
             resumo.write('{0}\n\nTOTAL VALOR CARGA BRUTA: {0}\n\n'.format(
                     self.ca, self.total_carga_bruta
             ))
@@ -136,6 +138,8 @@ class CA:
                 '\n\nOBS: Se houve gastos adicionais como alimentação ou '
                 'borracharia, estes gastos ainda serão descontados.'
             )
+
+        silent('unix2dos {0}'.format(filename))
 
     def stats(self):
         return {
@@ -361,3 +365,5 @@ class MountSQL:
                     total_combustivel,
                     total_liquido
                 ))
+
+        silent('unix2dos Resumo_geral.txt')

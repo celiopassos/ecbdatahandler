@@ -106,7 +106,7 @@ class CA:
         filename = '{0}/{1}.txt'.format(output_folder, self.ca)
 
         with open(filename, 'w') as resumo:
-            resumo.write('{0}\n\nTOTAL VALOR CARGA BRUTA: {0}\n\n'.format(
+            resumo.write('{0}\n\nTOTAL VALOR CARGA BRUTA: {1}\n\n'.format(
                     self.ca, self.total_carga_bruta
             ))
             resumo.write('Período: {0}\n\n'.format(', '.join(
@@ -358,12 +358,13 @@ class MountSQL:
                 'Total:\t\t\t\t{1}\n'
                 'Total (CA):\t\t\t{2}\n'
                 'Total combustível:\t\t{3}\n'
-                'Total líquido (-4% ISS):\t{4}\n'.format(
+                'Total líquido (-4% ISS):\t{4}\n\n'.format(
                     get_quinzenas([self.global_filters['period']])[0],
                     total,
                     total_carga_bruta,
                     total_combustivel,
                     total_liquido
                 ))
+            resumo.write(liquido_df.to_string(header=True))
 
         silent('unix2dos Resumo_geral.txt', silence_stderr=True)

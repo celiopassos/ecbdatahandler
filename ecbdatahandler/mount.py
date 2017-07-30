@@ -125,10 +125,10 @@ class CA:
                     col_space=10
                 ))
             resumo.write(
-                '\n\nTotal do combustível:\t\t\tR$ {0}'
-                '\nDescontado o combustível:\t\tR$ {1}'
-                '\nISS 4%:\t\t\t\t\t\t\tR$ {2}'
-                '\nTotal a receber:\t\t\t\tR$ {3}'.format(
+                '\n\nTotal do combustível: R$ {0}'
+                '\nDescontado o combustível: R$ {1}'
+                '\nISS 4%: R$ {2}'
+                '\nTotal a receber: R$ {3}'.format(
                     self.total_combustivel,
                     self.descontado,
                     self.iss,
@@ -283,7 +283,7 @@ class MountSQL:
                 info = self.combustivel_df.loc[
                     self.combustivel_df['placa'] == placa, 'prefixo_marca'
                 ].unique()
-                print('\nInfo for {0}:\n\t{1}'.format(placa, '\n\t'.join(info)))
+                print('\nInfo for {0}:\n {1}'.format(placa, '\n '.join(info)))
                 question = 'Is there medicao for {0}?'.format(placa)
                 if prompt_yes_no(question, default='no'):
                     placa_ca = input('Enter CA: ')
@@ -354,11 +354,11 @@ class MountSQL:
 
         with open('Resumo_geral.txt', 'w') as resumo:
             resumo.write(
-                'Período:\t\t\t\t\tR$ {0}\n\n'
-                'Total:\t\t\t\t\t\tR$ {1}\n'
-                'Total (CA):\t\t\t\t\tR$ {2}\n'
-                'Total combustível:\t\t\tR$ {3}\n'
-                'Total líquido (-4% ISS):\tR$ {4}\n\n'.format(
+                'Período: R$ {0}\n\n'
+                'Total: R$ {1}\n'
+                'Total (CA): R$ {2}\n'
+                'Total combustível: R$ {3}\n'
+                'Total líquido (-4% ISS): R$ {4}\n\n'.format(
                     get_quinzenas([self.global_filters['period']])[0],
                     total,
                     total_carga_bruta,

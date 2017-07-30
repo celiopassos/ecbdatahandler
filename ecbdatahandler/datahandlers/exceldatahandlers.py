@@ -76,8 +76,5 @@ class CombustivelExcel(ExcelDataHandlerABC):
         self.df = self.df.set_index('data', drop=False)
         self.df = self.df.sort_index()
 
-        for column in config['not_null'].split(', '):
-            self.df = self.df.loc[self.df[column].notnull()]
-
         self.df['placa'] = self.df['placa'].apply(fix_placa)
         self.df['data'] = self.df['data'].apply(date_to_str)

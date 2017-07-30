@@ -365,8 +365,8 @@ class MountSQL:
                     total_combustivel,
                     total_liquido
                 ))
-            resumo.write(
-                liquido_df.to_string(header=True, index=False, col_space=10)
-            )
+            resumo.write(liquido_df.to_string(
+                header=True, index=False, col_space=10, justify='left'
+            ))
 
         silent('unix2dos Resumo_geral.txt', silence_stderr=True)

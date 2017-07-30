@@ -344,12 +344,12 @@ class MountSQL:
         liquido_df = self.medicao_df.set_index('cod1')[['ca']].drop_duplicates()
         liquido_df = liquido_df.sort_index()
         liquido_df = liquido_df.rename(columns={'ca': 'CA'})
-        liquido_df = liquido_df.set_index('CA', drop=True)
+        liquido_df = liquido_df.set_index('CA', drop=False)
         liquido_df['Total a receber'] = np.nan
         total_liquido = 0.0
 
         for stat in stats:
-            liquido_df[stat['ca']] = stat['liquido']
+            liquido_df.loc[stat['ca']] = stat['liquido']
             total_liquido += stat['liquido']
 
         with open('Resumo_geral.txt', 'w') as resumo:
@@ -365,6 +365,6 @@ class MountSQL:
                     total_combustivel,
                     total_liquido
                 ))
-            resumo.write(liquido_df.to_string(header=True))
+            resumo.write(liquido_df.to_string(header=True, index=False))
 
         silent('unix2dos Resumo_geral.txt', silence_stderr=True)

@@ -21,20 +21,12 @@ class CA:
         self.medicao_df = medicao_df
         self.combustivel_df = combustivel_df
 
-        self.total_carga_bruta = round(medicao_df['valorizacao'].sum(), 2)
-        self.total_combustivel = round(
-            combustivel_df['total'].sum() if not combustivel_df.empty else 0.0,
-            2
-        )
-        self.descontado = round(
-            self.total_carga_bruta - self.total_combustivel,
-            2
-        )
-        self.iss = round(
-            0.04 * self.descontado if self.descontado > 0 else 0.0,
-            2
-        )
-        self.liquido = round(self.descontado - self.iss, 2)
+        self.total_carga_bruta = medicao_df['valorizacao'].sum()
+        self.total_combustivel = \
+            combustivel_df['total'].sum() if not combustivel_df.empty else 0.0
+        self.descontado = self.total_carga_bruta - self.total_combustivel
+        self.iss = 0.04 * self.descontado if self.descontado > 0 else 0.0
+        self.liquido = self.descontado - self.iss
 
     def export_sheet(self, output_folder, columns, widths):
         medicao_df = self.medicao_df.copy()
@@ -45,7 +37,7 @@ class CA:
         medicao_df = medicao_df.rename(columns=rename_map)
         medicao_df = medicao_df[columns]
 
-        filename = '{0}/{1}.xlsx'.format(output_folder, self.ca)
+        filename = '{}/{}.xlsx'.format(output_folder, self.ca)
 
         pandas.io.formats.excel.header_style = None
         writer = pd.ExcelWriter(filename, engine='xlsxwriter')
@@ -103,15 +95,16 @@ class CA:
         writer.save()
 
     def export_resumo(self, output_folder, columns):
-        filename = '{0}/{1}.txt'.format(output_folder, self.ca)
+        filename = '{}/{}.txt'.format(output_folder, self.ca)
 
         with open(filename, 'w') as resumo:
-            resumo.write('{0}\n\nTOTAL VALOR CARGA BRUTA: {1}\n\n'.format(
-                    self.ca, self.total_carga_bruta
+            resumo.write('{}\n\nPeríodo: {}\n\n'.format(
+                self.ca,
+                ', '.join(get_quinzenas(self.medicao_df['period'].unique()))
             ))
-            resumo.write('Período: {0}\n\n'.format(', '.join(
-                get_quinzenas(self.medicao_df['period'].unique())
-            )))
+            resumo.write('TOTAL VALOR CARGA BRUTA: {:.2f}\n\n'.format(
+                self.total_carga_bruta
+            ))
             if not self.combustivel_df.empty:
                 combustivel_df = self.combustivel_df.copy()
 
@@ -125,10 +118,10 @@ class CA:
                     col_space=10
                 ))
             resumo.write(
-                '\n\nTotal do combustível: R$ {0}'
-                '\nDescontado o combustível: R$ {1}'
-                '\nISS 4%: R$ {2}'
-                '\nTotal a receber: R$ {3}'.format(
+                '\n\nTotal do combustível: R$ {:.2f}'
+                '\nDescontado o combustível: R$ {:.2f}'
+                '\nISS 4%: R$ {:.2f}'
+                '\nTotal a receber: R$ {:.2f}'.format(
                     self.total_combustivel,
                     self.descontado,
                     self.iss,
@@ -139,7 +132,7 @@ class CA:
                 'borracharia, estes gastos ainda serão descontados.'
             )
 
-        silent('unix2dos {0}'.format(filename), silence_stderr=True)
+        silent('unix2dos {}'.format(filename), silence_stderr=True)
 
     def stats(self):
         return {
@@ -274,7 +267,7 @@ class MountSQL:
             list(set(combustivel_placas).difference(medicao_placas))
         )
         if missing_medicao:
-            print('CAs with medicao: {0}.'.format(', '.join(medicao_cas)))
+            print('CAs with medicao: {}.'.format(', '.join(medicao_cas)))
             print(
                 'Unable to find medicao of the following placas: %s.' %
                 (', '.join(missing_medicao))
@@ -283,8 +276,8 @@ class MountSQL:
                 info = self.combustivel_df.loc[
                     self.combustivel_df['placa'] == placa, 'prefixo_marca'
                 ].unique()
-                print('\nInfo for {0}:\n {1}'.format(placa, '\n '.join(info)))
-                question = 'Is there medicao for {0}?'.format(placa)
+                print('\nInfo for {}:\n\t{}'.format(placa, '\n '.join(info)))
+                question = 'Is there medicao for {}?'.format(placa)
                 if prompt_yes_no(question, default='no'):
                     placa_ca = input('Enter CA: ')
                     ca_placa_map.get(placa_ca, []).append(placa)
@@ -325,8 +318,8 @@ class MountSQL:
 
         for sheet in os.listdir(folders['excel']):
             command = 'soffice --headless --convert-to ' \
-                'pdf:"impress_pdf_Export" --outdir "{0}" ' \
-                '"{1}/{2}"'.format(folders['pdf'], folders['excel'], sheet)
+                'pdf:"impress_pdf_Export" --outdir "{}" ' \
+                '"{}/{}"'.format(folders['pdf'], folders['excel'], sheet)
             silent(command)
 
     def export_resumo_geral(self):
@@ -354,19 +347,23 @@ class MountSQL:
 
         with open('Resumo_geral.txt', 'w') as resumo:
             resumo.write(
-                'Período: R$ {0}\n\n'
-                'Total: R$ {1}\n'
-                'Total (CA): R$ {2}\n'
-                'Total combustível: R$ {3}\n'
-                'Total líquido (-4% ISS): R$ {4}\n\n'.format(
+                'Período: R$ {}\n\n'
+                'Total: R$ {:.2f}\n'
+                'Total (CA): R$ {:.2f}\n'
+                'Total combustível: R$ {:.2f}\n'
+                'Total líquido (-4% ISS): R$ {:.2f}\n\n'.format(
                     get_quinzenas([self.global_filters['period']])[0],
                     total,
                     total_carga_bruta,
                     total_combustivel,
-                    total_liquido
+                    total_liquido,
                 ))
             resumo.write(liquido_df.to_string(
-                header=True, index=False, col_space=10, justify='left'
+                header=True,
+                index=False,
+                col_space=10,
+                justify='left',
+                float_format='%0.2f'
             ))
 
         silent('unix2dos Resumo_geral.txt', silence_stderr=True)

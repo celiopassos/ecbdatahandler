@@ -349,7 +349,7 @@ class MountSQL:
         total_liquido = 0.0
 
         for stat in stats:
-            liquido_df[stat['ca']] = stat['liquido']
+            liquido_df.loc[stat['ca']] = stat['liquido']
             total_liquido += stat['liquido']
 
         with open('Resumo_geral.txt', 'w') as resumo:

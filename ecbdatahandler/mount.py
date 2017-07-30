@@ -354,17 +354,19 @@ class MountSQL:
 
         with open('Resumo_geral.txt', 'w') as resumo:
             resumo.write(
-                'Período:\t\t\t\t{0}\n\n'
-                'Total:\t\t\t\t{1}\n'
-                'Total (CA):\t\t\t{2}\n'
-                'Total combustível:\t\t{3}\n'
-                'Total líquido (-4% ISS):\t{4}\n\n'.format(
+                'Período:\t\t\t\t\tR$ {0}\n\n'
+                'Total:\t\t\t\t\t\tR$ {1}\n'
+                'Total (CA):\t\t\t\t\tR$ {2}\n'
+                'Total combustível:\t\t\tR$ {3}\n'
+                'Total líquido (-4% ISS):\tR$ {4}\n\n'.format(
                     get_quinzenas([self.global_filters['period']])[0],
                     total,
                     total_carga_bruta,
                     total_combustivel,
                     total_liquido
                 ))
-            resumo.write(liquido_df.to_string(header=True, index=False))
+            resumo.write(
+                liquido_df.to_string(header=True, index=False, col_space=10)
+            )
 
         silent('unix2dos Resumo_geral.txt', silence_stderr=True)

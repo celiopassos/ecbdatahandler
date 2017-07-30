@@ -164,6 +164,7 @@ class MountSQL:
         self.data_handlers = {}
         self.data_config = {}
         self.ca_list = []
+        self.unproductive = []
 
         self.mysql = dict(config['mysql'])
         self.global_filters = dict(config['global_filters'])
@@ -267,20 +268,26 @@ class MountSQL:
             list(set(combustivel_placas).difference(medicao_placas))
         )
         if missing_medicao:
-            print('CAs with medicao: {}.'.format(', '.join(medicao_cas)))
+            print('CAs with medicao: {}.\n'.format(', '.join(medicao_cas)))
             print(
-                'Unable to find medicao of the following placas: %s.' %
+                'Unable to find medicao of the following placas: %s.\n' %
                 (', '.join(missing_medicao))
             )
             for placa in missing_medicao:
                 info = self.combustivel_df.loc[
                     self.combustivel_df['placa'] == placa, 'prefixo_marca'
                 ].unique()
-                print('\nInfo for {}:\n\t{}'.format(placa, '\n '.join(info)))
+                print('Info for {}:\n\t{}\n'.format(placa, '\n '.join(info)))
                 question = 'Is there medicao for {}?'.format(placa)
                 if prompt_yes_no(question, default='no'):
                     placa_ca = input('Enter CA: ')
                     ca_placa_map.get(placa_ca, []).append(placa)
+                    missing_medicao.remove(placa)
+
+        self.unproductive = pd.DataFrame([(
+            placa,
+            self.combustivel_df.loc[self.combustivel_df['placa'] == placa]
+        ) for placa in missing_medicao], columns=['Placa', 'Total'])
 
         for ca in medicao_cas:
             ca_medicao = self.medicao_df.loc[
@@ -365,5 +372,17 @@ class MountSQL:
                 justify='left',
                 float_format='%0.2f'
             ))
+
+            if not self.unproductive.empty:
+                resumo.write(
+                    'Caminhões que gastaram combustível e não produziram:\n\n'
+                )
+                resumo.write(self.unproductive.to_string(
+                    header=True,
+                    index=False,
+                    col_space=10,
+                    justify='left',
+                    float_format='%0.2f'
+                ))
 
         silent('unix2dos Resumo_geral.txt', silence_stderr=True)

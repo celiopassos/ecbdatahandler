@@ -1,5 +1,5 @@
 [global_filters]
-period = 2017-06:1
+period = MES:QUINZENA
 
 [medicao]
 names = medicao_m3, medicao_ton

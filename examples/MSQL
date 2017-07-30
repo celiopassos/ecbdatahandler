@@ -17,11 +17,11 @@ files = Combustivel.xlsx:Plan1
 table = combustivel
 
 [global_filters]
-start_date = 2017-06-01
-end_date = 2017-06-15
+start_date = PRIMEIRO_DIA
+end_date = ULTIMO_DIA
 
 [global_tags]
-period = 2017-06:1
+period = MES:QUINZENA
 
 [mysql]
 user=celio

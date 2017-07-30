@@ -139,7 +139,7 @@ class CA:
                 'borracharia, estes gastos ainda serão descontados.'
             )
 
-        silent('unix2dos {0}'.format(filename))
+        silent('unix2dos {0}'.format(filename), silence_stderr=True)
 
     def stats(self):
         return {
@@ -366,4 +366,4 @@ class MountSQL:
                     total_liquido
                 ))
 
-        silent('unix2dos Resumo_geral.txt')
+        silent('unix2dos Resumo_geral.txt', silence_stderr=True)

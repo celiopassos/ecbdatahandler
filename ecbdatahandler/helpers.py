@@ -63,9 +63,12 @@ def prompt_yes_no(question, default="yes"):
             print("Please respond with 'yes' or 'no' (or 'y' or 'n').\n")
 
 
-def silent(command):
+def silent(command, silence_stderr=False):
     with open(os.devnull, "w") as fnull:
-        subprocess.call(command, stdout=fnull, shell=True)
+        if silence_stderr:
+            subprocess.call(command, stdout=fnull, stderr=fnull, shell=True)
+        else:
+            subprocess.call(command, stdout=fnull, shell=True)
 
 
 def get_quinzenas(iterable):

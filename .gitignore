@@ -4,5 +4,5 @@ tags
 
 *.pyc
 *.egg-info
-virtualenv
+env
 examples/*

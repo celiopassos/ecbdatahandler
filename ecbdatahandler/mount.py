@@ -164,7 +164,7 @@ class MountSQL:
         self.data_handlers = {}
         self.data_config = {}
         self.ca_list = []
-        self.unproductive = []
+        self.unproductive = pd.DataFrame()
 
         self.mysql = dict(config['mysql'])
         self.global_filters = dict(config['global_filters'])
@@ -277,7 +277,7 @@ class MountSQL:
                 info = self.combustivel_df.loc[
                     self.combustivel_df['placa'] == placa, 'prefixo_marca'
                 ].unique()
-                print('Info for {}:\n\t{}\n'.format(placa, '\n '.join(info)))
+                print('Info for {}:\n\t{}'.format(placa, '\n '.join(info)))
                 question = 'Is there medicao for {}?'.format(placa)
                 if prompt_yes_no(question, default='no'):
                     placa_ca = input('Enter CA: ')
@@ -286,7 +286,9 @@ class MountSQL:
 
         self.unproductive = pd.DataFrame([(
             placa,
-            self.combustivel_df.loc[self.combustivel_df['placa'] == placa]
+            self.combustivel_df.loc[
+                self.combustivel_df['placa'] == placa, 'total'
+            ].sum()
         ) for placa in missing_medicao], columns=['Placa', 'Total'])
 
         for ca in medicao_cas:
@@ -331,13 +333,14 @@ class MountSQL:
 
     def export_resumo_geral(self):
         total = self.medicao_df['valorizacao'].sum()
+        total_combustivel = self.combustivel_df['total'].sum()
 
         stats = [ca.stats() for ca in self.ca_list]
 
-        total_carga_bruta = sum(
+        total_ca = sum(
             stat['total_carga_bruta'] for stat in stats
         )
-        total_combustivel = sum(
+        total_combustivel_ca = sum(
             stat['total_combustivel'] for stat in stats
         )
 
@@ -354,15 +357,17 @@ class MountSQL:
 
         with open('Resumo_geral.txt', 'w') as resumo:
             resumo.write(
-                'Período: R$ {}\n\n'
+                'Período: {}\n\n'
                 'Total: R$ {:.2f}\n'
                 'Total (CA): R$ {:.2f}\n'
                 'Total combustível: R$ {:.2f}\n'
+                'Total combustível (CA): R$ {:.2f}\n'
                 'Total líquido (-4% ISS): R$ {:.2f}\n\n'.format(
                     get_quinzenas([self.global_filters['period']])[0],
                     total,
-                    total_carga_bruta,
+                    total_ca,
                     total_combustivel,
+                    total_combustivel_ca,
                     total_liquido,
                 ))
             resumo.write(liquido_df.to_string(
@@ -375,7 +380,8 @@ class MountSQL:
 
             if not self.unproductive.empty:
                 resumo.write(
-                    'Caminhões que gastaram combustível e não produziram:\n\n'
+                    '\n\nCaminhões que gastaram combustível e não produziram:'
+                    '\n\n'
                 )
                 resumo.write(self.unproductive.to_string(
                     header=True,

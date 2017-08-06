@@ -30,7 +30,7 @@ class CA:
 
     def export_sheet(self, output_folder, columns, widths):
         medicao_df = self.medicao_df.copy()
-        medicao_df = medicao_df.sort_values('data')
+        medicao_df = medicao_df.sort_values(by=['data', 'km_inicial'])
         medicao_df['data'] = medicao_df['data'].apply(date_to_str_pt)
 
         rename_map = {to_sql_string(col): col for col in columns}

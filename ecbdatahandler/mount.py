@@ -273,7 +273,8 @@ class MountSQL:
                 'Unable to find medicao of the following placas: %s.\n' %
                 (', '.join(missing_medicao))
             )
-            for placa in missing_medicao:
+            # iterate over copy, because we're altering it
+            for placa in missing_medicao[:]:
                 info = self.combustivel_df.loc[
                     self.combustivel_df['placa'] == placa, 'prefixo_marca'
                 ].unique()

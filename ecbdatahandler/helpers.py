@@ -3,6 +3,9 @@
 import re
 import os
 import subprocess
+import locale
+
+from datetime import datetime
 
 
 def fix_placa(placa):
@@ -72,6 +75,12 @@ def silent(command, silence_stderr=False):
 
 
 def get_quinzenas(iterable):
-    return [
-        '{1}ª quinzena de {0}'.format(*(pair.split(':'))) for pair in iterable
-    ]
+    locale.setlocale(locale.LC_TIME, 'pt_BR')
+    quinzenas = []
+    for pair in iterable:
+        quinzena = pair.split(':')[1]
+        mes = datetime.strftime(
+            datetime.strptime(pair.split(':')[0], '%Y-%m'), '%B, %Y'
+        )
+        quinzenas.append('{0}ª quinzena de {1}.'.format(quinzena, mes))
+    return quinzenas

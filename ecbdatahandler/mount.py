@@ -2,6 +2,7 @@
 
 import os
 import configparser
+import re
 
 import pandas as pd
 import pandas.io.formats.excel
@@ -267,12 +268,27 @@ class MountSQL:
         missing_medicao = sorted(
             list(set(combustivel_placas).difference(medicao_placas))
         )
+
+        # try to find CA in info's first string
+        if missing_medicao:
+            # iterate over copy, because we're altering it
+            for placa in missing_medicao[:]:
+                info = self.combustivel_df.loc[
+                    self.combustivel_df['placa'] == placa, 'prefixo_marca'
+                ].unique()
+                placa_ca = re.search('CA-\d+|$', info[0]).group()
+                if placa_ca:
+                    ca_placa_map.get(placa_ca, []).append(placa)
+                    missing_medicao.remove(placa)
+
+        # ask user for CA if still not found
         if missing_medicao:
             print('CAs with medicao: {}.\n'.format(', '.join(medicao_cas)))
             print(
                 'Unable to find medicao of the following placas: %s.\n' %
                 (', '.join(missing_medicao))
             )
+
             # iterate over copy, because we're altering it
             for placa in missing_medicao[:]:
                 info = self.combustivel_df.loc[

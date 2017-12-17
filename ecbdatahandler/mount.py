@@ -339,22 +339,43 @@ class MountSQL:
         for folder in folders.values():
             os.makedirs(folder, exist_ok=True)
 
-        print('Exporting sheets and markdowns...')
-        for ca in tqdm(self.ca_list):
+        progress_bar = tqdm(
+            self.ca_list,
+            ascii=True,
+            desc='Exporting sheets and markdowns',
+            bar_format='{desc}... {percentage:3.0f}% [{bar}]'
+        )
+        for ca in progress_bar:
             ca.export_sheet(
                 folders['excel'], self.medicao_columns, self.medicao_widths
             )
             ca.export_resumo(folders['md'], self.combustivel_columns)
 
-        print('Converting sheets to pdf...')
-        for sheet in tqdm(os.listdir(folders['excel'])):
+        progress_bar = tqdm(
+            [
+                sheet for sheet in os.listdir(folders['excel'])
+                if sheet.endswith('.xlsx')
+            ],
+            ascii=True,
+            desc='Converting sheets to pdf',
+            bar_format='{desc}... {percentage:3.0f}% [{bar}]'
+        )
+        for sheet in progress_bar:
             command = 'soffice --headless --convert-to ' \
                 'pdf:"impress_pdf_Export" --outdir "{}" ' \
                 '"{}/{}"'.format(folders['pdf'], folders['excel'], sheet)
             silent(command)
 
-        print('Converting markdowns to pdf...')
-        for md in tqdm(os.listdir(folders['md'])):
+        progress_bar = tqdm(
+            [
+                sheet for sheet in os.listdir(folders['md'])
+                if sheet.endswith('.md')
+            ],
+            ascii=True,
+            desc='Converting markdowns to pdf',
+            bar_format='{desc}... {percentage:3.0f}% [{bar}]'
+        )
+        for md in progress_bar:
             command = 'pandoc "{}/{}" -o "{}/{}"'.format(
                 folders['md'], md, folders['pdf2'], md.replace('md', 'pdf')
             )
@@ -365,13 +386,8 @@ class MountSQL:
         total_combustivel = self.combustivel_df['total'].sum()
 
         stats = [ca.stats() for ca in self.ca_list]
-
-        total_ca = sum(
-            stat['total_carga_bruta'] for stat in stats
-        )
-        total_combustivel_ca = sum(
-            stat['total_combustivel'] for stat in stats
-        )
+        total_ca = sum(stat['total_carga_bruta'] for stat in stats)
+        total_combustivel_ca = sum(stat['total_combustivel'] for stat in stats)
 
         liquido_df = self.medicao_df.set_index('cod1')[['ca']].drop_duplicates()
         liquido_df = liquido_df.sort_index()
@@ -384,7 +400,7 @@ class MountSQL:
             liquido_df.loc[stat['ca'], 'Total a receber'] = stat['liquido']
             total_liquido += stat['liquido']
 
-        with open('Resumo_geral.md', 'w') as resumo:
+        with open('Resumo_geral.txt', 'w') as resumo:
             resumo.write(
                 'Período: {}\n\n'
                 'Total: R$ {:.2f}\n'
@@ -420,4 +436,4 @@ class MountSQL:
                     float_format='%0.2f'
                 ))
 
-        silent('unix2dos Resumo_geral.md', silence_stderr=True)
+        silent('unix2dos Resumo_geral.txt', silence_stderr=True)

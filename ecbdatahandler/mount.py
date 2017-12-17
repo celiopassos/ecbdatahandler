@@ -4,6 +4,9 @@ import os
 import configparser
 import re
 
+from tqdm import tqdm
+from tabulate import tabulate
+
 import pandas as pd
 import pandas.io.formats.excel
 import numpy as np
@@ -95,33 +98,36 @@ class CA:
         writer.save()
 
     def export_resumo(self, output_folder, columns):
-        filename = '{}/{}.txt'.format(output_folder, self.ca)
+        filename = '{}/{} (resumo).md'.format(output_folder, self.ca)
 
         with open(filename, 'w') as resumo:
-            resumo.write('{}\n\nPeríodo: {}\n\n'.format(
+            resumo.write('# {}\n\n### Período: {}\n\n'.format(
                 self.ca,
                 ', '.join(get_quinzenas(self.medicao_df['period'].unique()))
             ))
-            resumo.write('TOTAL VALOR CARGA BRUTA: {:.2f}\n\n'.format(
+            resumo.write('TOTAL VALOR CARGA BRUTA: R$ {:.2f}.\n\n'.format(
                 self.total_carga_bruta
             ))
             if not self.combustivel_df.empty:
                 combustivel_df = self.combustivel_df.copy()
+                combustivel_df['data'] = combustivel_df['data'] \
+                    .apply(date_to_str_pt)
 
                 rename_map = {to_sql_string(col): col for col in columns}
                 combustivel_df = combustivel_df.rename(columns=rename_map)
-                resumo.write(combustivel_df.to_string(
-                    columns=columns,
-                    index=False,
-                    header=True,
-                    justify='left',
-                    col_space=10
-                ))
+                resumo.write(
+                    tabulate(
+                        combustivel_df[columns],
+                        headers='keys',
+                        tablefmt='pipe',
+                        showindex='false'
+                    )
+                )
             resumo.write(
-                '\n\nTotal do combustível: R$ {:.2f}'
-                '\nDescontado o combustível: R$ {:.2f}'
-                '\nISS 4%: R$ {:.2f}'
-                '\nTotal a receber: R$ {:.2f}'.format(
+                '\n\nTotal do combustível: R$ {:.2f}.'
+                '\n\nDescontado o combustível: R$ {:.2f}.'
+                '\n\nISS 4%: R$ {:.2f}.'
+                '\n\n**Total a receber: R$ {:.2f}**.'.format(
                     self.total_combustivel,
                     self.descontado,
                     self.iss,
@@ -327,21 +333,31 @@ class MountSQL:
         folders = {
             'excel': 'CA/Partes diárias - EXCEL',
             'pdf': 'CA/Partes diárias - PDF',
-            'txt': 'CA/Resumos'
+            'md': 'CA/Resumos - MD',
+            'pdf2': 'CA/Resumos - PDF'
         }
         for folder in folders.values():
             os.makedirs(folder, exist_ok=True)
 
-        for ca in self.ca_list:
+        print('Exporting sheets and markdowns...')
+        for ca in tqdm(self.ca_list):
             ca.export_sheet(
                 folders['excel'], self.medicao_columns, self.medicao_widths
             )
-            ca.export_resumo(folders['txt'], self.combustivel_columns)
+            ca.export_resumo(folders['md'], self.combustivel_columns)
 
-        for sheet in os.listdir(folders['excel']):
+        print('Converting sheets to pdf...')
+        for sheet in tqdm(os.listdir(folders['excel'])):
             command = 'soffice --headless --convert-to ' \
                 'pdf:"impress_pdf_Export" --outdir "{}" ' \
                 '"{}/{}"'.format(folders['pdf'], folders['excel'], sheet)
+            silent(command)
+
+        print('Converting markdowns to pdf...')
+        for md in tqdm(os.listdir(folders['md'])):
+            command = 'pandoc "{}/{}" -o "{}/{}"'.format(
+                folders['md'], md, folders['pdf2'], md.replace('md', 'pdf')
+            )
             silent(command)
 
     def export_resumo_geral(self):
@@ -368,7 +384,7 @@ class MountSQL:
             liquido_df.loc[stat['ca'], 'Total a receber'] = stat['liquido']
             total_liquido += stat['liquido']
 
-        with open('Resumo_geral.txt', 'w') as resumo:
+        with open('Resumo_geral.md', 'w') as resumo:
             resumo.write(
                 'Período: {}\n\n'
                 'Total: R$ {:.2f}\n'
@@ -404,4 +420,4 @@ class MountSQL:
                     float_format='%0.2f'
                 ))
 
-        silent('unix2dos Resumo_geral.txt', silence_stderr=True)
+        silent('unix2dos Resumo_geral.md', silence_stderr=True)

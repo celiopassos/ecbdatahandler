@@ -37,7 +37,12 @@ class SQLDataHandlerABC(ABC):
         raise TypeError
 
 
-class MedicaoSQLm3(SQLDataHandlerABC):
+class MedicaoSQL(SQLDataHandlerABC):
+
+    def __init__(self, table, filters, unid):
+        super().__init__(table, filters)
+        self.unid = unid
+        self.price_column = unid + 'xpuxkm'
 
     def prepare(self, config, packs):
         for column in config['not_null'].split(', '):
@@ -49,7 +54,7 @@ class MedicaoSQLm3(SQLDataHandlerABC):
 
         for pack, price in config['price'].items():
             self._df.loc[
-                self._df['material'].isin(packs[pack]), 'm3xpuxkm'
+                self._df['material'].isin(packs[pack]), self.price_column
             ] = price
             materiais.difference_update(set(packs[pack]))
 
@@ -57,8 +62,8 @@ class MedicaoSQLm3(SQLDataHandlerABC):
             price_map = {
                 float(k): float(v) for k, v in config['null_price_map'].items()
             }
-            self._df.loc[self._df['material'].isnull(), 'm3xpuxkm'] = \
-                self._df.loc[self._df['material'].isnull(), 'm3xpuxkm'] \
+            self._df.loc[self._df['material'].isnull(), self.price_colum] = \
+                self._df.loc[self._df['material'].isnull(), self.price_colum] \
                 .map(price_map)
             materiais.discard(None)
 
@@ -73,50 +78,8 @@ class MedicaoSQLm3(SQLDataHandlerABC):
                 sys.exit(1)
 
         self._df['valorizacao'] = (
-            pd.to_numeric(self._df['m3']) *
-            pd.to_numeric(self._df['m3xpuxkm']) *
-            pd.to_numeric(self._df['acerto'])
-        ).fillna(0.0).round(2)
-
-
-class MedicaoSQLton(SQLDataHandlerABC):
-
-    def prepare(self, config, packs):
-        for column in config['not_null'].split(', '):
-            self._df = self._df.loc[self._df[column].notnull()]
-
-        self._df['data'] = pd.to_datetime(self._df['data'])
-
-        materiais = set(self._df['material'])
-
-        for pack, price in config['price'].items():
-            self._df.loc[
-                self._df['material'].isin(packs[pack]), 'tonxpuxkm'
-            ] = price
-            materiais.difference_update(set(packs[pack]))
-
-        if None in materiais:
-            price_map = {
-                float(k): float(v) for k, v in config['null_price_map'].items()
-            }
-            self._df.loc[self._df['material'].isnull(), 'tonxpuxkm'] = \
-                self._df.loc[self._df['material'].isnull(), 'tonxpuxkm'] \
-                .map(price_map)
-            materiais.discard(None)
-
-        if materiais:
-            print(
-                'The following materiais did not have their price updated:',
-                '\n\t{0}\n'.format('\n\t'.join(materiais)),
-                'In the handling of table {0}.'.format(config['table'])
-            )
-            cont = prompt_yes_no('Continue?', default='no')
-            if not cont:
-                sys.exit(1)
-
-        self._df['valorizacao'] = (
-            pd.to_numeric(self._df['ton']) *
-            pd.to_numeric(self._df['tonxpuxkm']) *
+            pd.to_numeric(self._df[self.unid]) *
+            pd.to_numeric(self._df[self.price_column]) *
             pd.to_numeric(self._df['acerto'])
         ).fillna(0.0).round(2)
 

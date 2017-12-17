@@ -9,8 +9,7 @@ import pandas.io.formats.excel
 import numpy as np
 import sqlalchemy
 
-from ecbdatahandler.datahandlers import MedicaoSQLm3, MedicaoSQLton, \
-    CombustivelSQL
+from ecbdatahandler.datahandlers import MedicaoSQL, CombustivelSQL
 from ecbdatahandler.helpers import to_sql_string, prompt_yes_no, silent, \
     date_to_str_pt, get_quinzenas
 
@@ -190,14 +189,11 @@ class MountSQL:
                 name, 'null_price_map'
             )
 
-            name_type = {
-                'm3': MedicaoSQLm3,
-                'ton': MedicaoSQLton
-            }[name_config['type']]
-
             self.data_config[name] = name_config
-            self.data_handlers[name] = name_type(
-                table=name_config['table'], filters=self.global_filters
+            self.data_handlers[name] = MedicaoSQL(
+                table=name_config['table'],
+                filters=self.global_filters,
+                unid=name_config['type']
             )
 
         self.combustivel_names = get_config_split('combustivel', 'names')

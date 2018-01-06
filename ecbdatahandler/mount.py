@@ -279,7 +279,7 @@ class MountSQL:
                     self.combustivel_df['placa'] == placa, 'prefixo_marca'
                 ].unique()
                 placa_ca = re.search('CA-\d+|$', info[0]).group()
-                if placa_ca:
+                if placa_ca in medicao_placas:
                     ca_placa_map.get(placa_ca, []).append(placa)
                     missing_medicao.remove(placa)
 

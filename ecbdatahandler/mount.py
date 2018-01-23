@@ -105,7 +105,7 @@ class CA:
                 self.ca,
                 ', '.join(get_quinzenas(self.medicao_df['period'].unique()))
             ))
-            resumo.write('TOTAL VALOR CARGA BRUTA: R$ {:.2f}.\n\n'.format(
+            resumo.write('TOTAL VALOR CARGA BRUTA: R\\$ {:.2f}.\n\n'.format(
                 self.total_carga_bruta
             ))
             if not self.combustivel_df.empty:
@@ -124,10 +124,10 @@ class CA:
                     )
                 )
             resumo.write(
-                '\n\nTotal do combustível: R$ {:.2f}.'
-                '\n\nDescontado o combustível: R$ {:.2f}.'
-                '\n\nISS 4%: R$ {:.2f}.'
-                '\n\n**Total a receber: R$ {:.2f}**.'.format(
+                '\n\nTotal do combustível: R\\$ {:.2f}.'
+                '\n\nDescontado o combustível: R\\$ {:.2f}.'
+                '\n\nISS 4%: R\\$ {:.2f}.'
+                '\n\n**Total a receber: R\\$ {:.2f}**.'.format(
                     self.total_combustivel,
                     self.descontado,
                     self.iss,
@@ -302,6 +302,7 @@ class MountSQL:
                     placa_ca = input('Enter CA: ')
                     ca_placa_map.get(placa_ca, []).append(placa)
                     missing_medicao.remove(placa)
+                print('')
 
         self.unproductive = pd.DataFrame([(
             placa,
@@ -376,9 +377,10 @@ class MountSQL:
             bar_format='{desc}... {percentage:3.0f}% [{bar}]'
         )
         for md in progress_bar:
-            command = 'pandoc "{}/{}" -o "{}/{}"'.format(
-                folders['md'], md, folders['pdf2'], md.replace('md', 'pdf')
-            )
+            command = 'pandoc "{}/{}" -o "{}/{}" -H <(printf ' \
+                '"\\\\\\usepackage[margins=raggedright]{{floatrow}}")'.format(
+                    folders['md'], md, folders['pdf2'], md.replace('md', 'pdf')
+                )
             silent(command)
 
     def export_resumo_geral(self):
@@ -403,11 +405,11 @@ class MountSQL:
         with open('Resumo_geral.txt', 'w') as resumo:
             resumo.write(
                 'Período: {}\n\n'
-                'Total: R$ {:.2f}\n'
-                'Total (CA): R$ {:.2f}\n'
-                'Total combustível: R$ {:.2f}\n'
-                'Total combustível (CA): R$ {:.2f}\n'
-                'Total líquido (-4% ISS): R$ {:.2f}\n\n'.format(
+                'Total: R\\$ {:.2f}\n'
+                'Total (CA): R\\$ {:.2f}\n'
+                'Total combustível: R\\$ {:.2f}\n'
+                'Total combustível (CA): R\\$ {:.2f}\n'
+                'Total líquido (-4% ISS): R\\$ {:.2f}\n\n'.format(
                     get_quinzenas([self.global_filters['period']])[0],
                     total,
                     total_ca,

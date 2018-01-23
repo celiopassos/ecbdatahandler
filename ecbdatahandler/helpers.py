@@ -69,9 +69,20 @@ def prompt_yes_no(question, default="yes"):
 def silent(command, silence_stderr=False):
     with open(os.devnull, "w") as fnull:
         if silence_stderr:
-            subprocess.call(command, stdout=fnull, stderr=fnull, shell=True)
+            subprocess.call(
+                command,
+                stdout=fnull,
+                stderr=fnull,
+                shell=True,
+                executable='/bin/bash'
+            )
         else:
-            subprocess.call(command, stdout=fnull, shell=True)
+            subprocess.call(
+                command,
+                stdout=fnull,
+                shell=True,
+                executable='/bin/bash'
+            )
 
 
 def get_quinzenas(iterable):

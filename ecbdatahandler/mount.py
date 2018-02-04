@@ -14,13 +14,16 @@ import sqlalchemy
 
 from ecbdatahandler.datahandlers import MedicaoSQL, CombustivelSQL
 from ecbdatahandler.helpers import to_sql_string, prompt_yes_no, silent, \
-    date_to_str_pt, get_quinzenas
+    date_to_str_pt
 
 
 class CA:
 
-    def __init__(self, ca, medicao_df, combustivel_df=pd.DataFrame()):
+    def __init__(
+        self, ca, period_str, medicao_df, combustivel_df=pd.DataFrame()
+    ):
         self.ca = ca
+        self.period_str = period_str
         self.medicao_df = medicao_df
         self.combustivel_df = combustivel_df
 
@@ -101,9 +104,8 @@ class CA:
         filename = '{}/{} (resumo).md'.format(output_folder, self.ca)
 
         with open(filename, 'w') as resumo:
-            resumo.write('# {}\n\n### Período: {}\n\n'.format(
-                self.ca,
-                ', '.join(get_quinzenas(self.medicao_df['period'].unique()))
+            resumo.write('# {}\n\n### Período: {}.\n\n'.format(
+                self.ca, self.period_str
             ))
             resumo.write('TOTAL VALOR CARGA BRUTA: R\\$ {:.2f}.\n\n'.format(
                 self.total_carga_bruta
@@ -172,6 +174,7 @@ class MountSQL:
         self.ca_list = []
         self.unproductive = pd.DataFrame()
 
+        self.period_str = dict(config['general'])['period_str']
         self.mysql = dict(config['mysql'])
         self.global_filters = dict(config['global_filters'])
         self.packs = {
@@ -319,9 +322,13 @@ class MountSQL:
                 self.combustivel_df['placa'].isin(ca_placa_map[ca])
             ]
             if not ca_combustivel.empty:
-                self.ca_list.append(CA(ca, ca_medicao, ca_combustivel))
+                self.ca_list.append(
+                    CA(ca, self.period_str, ca_medicao, ca_combustivel)
+                )
             else:
-                self.ca_list.append(CA(ca, ca_medicao))
+                self.ca_list.append(
+                    CA(ca, self.period_str, ca_medicao)
+                )
 
     def mount(self):
         self._aggregate()
@@ -405,12 +412,12 @@ class MountSQL:
         with open('Resumo_geral.txt', 'w') as resumo:
             resumo.write(
                 'Período: {}\n\n'
-                'Total: R\\$ {:.2f}\n'
-                'Total (CA): R\\$ {:.2f}\n'
-                'Total combustível: R\\$ {:.2f}\n'
-                'Total combustível (CA): R\\$ {:.2f}\n'
-                'Total líquido (-4% ISS): R\\$ {:.2f}\n\n'.format(
-                    get_quinzenas([self.global_filters['period']])[0],
+                'Total: R$ {:.2f}\n'
+                'Total (CA): R$ {:.2f}\n'
+                'Total combustível: R$ {:.2f}\n'
+                'Total combustível (CA): R$ {:.2f}\n'
+                'Total líquido (-4% ISS): R$ {:.2f}\n\n'.format(
+                    self.period_str,
                     total,
                     total_ca,
                     total_combustivel,

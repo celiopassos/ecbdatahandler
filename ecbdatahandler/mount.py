@@ -385,7 +385,8 @@ class MountSQL:
         )
         for md in progress_bar:
             command = 'pandoc "{}/{}" -o "{}/{}" -H <(printf ' \
-                '"\\\\\\usepackage[margins=raggedright]{{floatrow}}")'.format(
+                '"\\\\\\usepackage[margins=raggedright]{{floatrow}}") ' \
+                '-V geometry:margin=1in -V fontsize=12pt'.format(
                     folders['md'], md, folders['pdf2'], md.replace('md', 'pdf')
                 )
             silent(command)

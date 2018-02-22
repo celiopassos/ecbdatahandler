@@ -62,9 +62,10 @@ class MedicaoSQL(SQLDataHandlerABC):
             price_map = {
                 float(k): float(v) for k, v in config['null_price_map'].items()
             }
-            self._df.loc[self._df['material'].isnull(), self.price_colum] = \
-                self._df.loc[self._df['material'].isnull(), self.price_colum] \
-                .map(price_map)
+            self._df.loc[self._df['material'].isnull(), self.price_column] = \
+                self._df.loc[
+                    self._df['material'].isnull(), self.price_column
+                ].map(price_map)
             materiais.discard(None)
 
         if materiais:

@@ -77,6 +77,7 @@ class MedicaoSQL(SQLDataHandlerABC):
             cont = prompt_yes_no('Continue?', default='no')
             if not cont:
                 sys.exit(1)
+            print('')
 
         self._df['valorizacao'] = (
             pd.to_numeric(self._df[self.unid]) *

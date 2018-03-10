@@ -263,7 +263,7 @@ class MountSQL:
     def _split_ca_com_combustivel(self):
         medicao_cas = self.medicao_df.sort_values('cod1')['ca'].unique()
         ca_placa_map = {
-            ca: list(self.medicao_df.loc[self.medicao_df['ca'] == ca, 'placa'])
+            ca: set(self.medicao_df.loc[self.medicao_df['ca'] == ca, 'placa'])
             for ca in medicao_cas
         }
 
@@ -276,42 +276,58 @@ class MountSQL:
 
         # try to find CA in info's first string
         if missing_medicao:
+            print('CAs with medicao: {}.\n'.format(', '.join(medicao_cas)))
+
             # iterate over copy, because we're altering it
             for placa in missing_medicao[:]:
-                info = self.combustivel_df.loc[
+                info = '\n '.join(self.combustivel_df.loc[
                     self.combustivel_df['placa'] == placa, 'prefixo_marca'
-                ].unique()
-                placa_ca = re.search('CA-\d+|$', info[0]).group()
-                ca_placa_map.get(placa_ca, []).append(placa)
-                missing_medicao.remove(placa)
+                ].unique())
 
-        # ask user for CA if still not found
+                placa_ca = re.search('CA-\d+|$', info).group()
+                if not placa_ca:
+                    print(
+                        'Unable to find medicao of the placa: %s.\n' % placa
+                    )
+                    print('Info for {}:\n\t{}'.format(placa, info))
+                    placa_ca = input('Enter CA: ')
+                    print('')
+
+                if placa_ca in ca_placa_map:
+                    ca_placa_map[placa_ca].add(placa)
+                else:
+                    ca_placa_map[placa_ca] = set([placa])
+
+                if placa_ca in medicao_cas:
+                    missing_medicao.remove(placa)
+
+        reverse_ca_placa_map = {
+            placa: placa_ca
+            for placa in ca_placa_map[placa_ca]
+            for placa_ca in ca_placa_map
+        }
+
         if missing_medicao:
-            print('CAs with medicao: {}.\n'.format(', '.join(medicao_cas)))
             print(
-                'Unable to find medicao of the following placas: %s.\n' %
-                (', '.join(missing_medicao))
+                'Unable to find medicao of the following placas:\n\t{}.\n'
+                .format(', '.join(
+                    placa + ' (' + reverse_ca_placa_map[placa] + ')'
+                    for placa in missing_medicao
+                ))
             )
 
-            # iterate over copy, because we're altering it
-            for placa in missing_medicao[:]:
-                info = self.combustivel_df.loc[
-                    self.combustivel_df['placa'] == placa, 'prefixo_marca'
-                ].unique()
-                print('Info for {}:\n\t{}'.format(placa, '\n '.join(info)))
-                question = 'Is there medicao for {}?'.format(placa)
-                if prompt_yes_no(question, default='no'):
-                    placa_ca = input('Enter CA: ')
-                    ca_placa_map.get(placa_ca, []).append(placa)
-                    missing_medicao.remove(placa)
-                print('')
-
-        self.unproductive = pd.DataFrame([(
-            placa,
-            self.combustivel_df.loc[
-                self.combustivel_df['placa'] == placa, 'total'
-            ].sum()
-        ) for placa in missing_medicao], columns=['Placa', 'Total'])
+        self.unproductive = pd.DataFrame(
+            [
+                (
+                    reverse_ca_placa_map[placa],
+                    placa,
+                    self.combustivel_df.loc[
+                        self.combustivel_df['placa'] == placa, 'total'
+                    ].sum()
+                )
+                for placa in missing_medicao
+            ], columns=['CA', 'Placa', 'Total']
+        )
 
         for ca in medicao_cas:
             ca_medicao = self.medicao_df.loc[

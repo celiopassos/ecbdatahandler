@@ -303,8 +303,8 @@ class MountSQL:
 
         reverse_ca_placa_map = {
             placa: placa_ca
-            for placa in ca_placa_map[placa_ca]
             for placa_ca in ca_placa_map
+            for placa in ca_placa_map[placa_ca]
         }
 
         if missing_medicao:

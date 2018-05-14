@@ -20,10 +20,12 @@ from ecbdatahandler.helpers import to_sql_string, prompt_yes_no, silent, \
 class CA:
 
     def __init__(
-        self, ca, period_str, medicao_df, combustivel_df=pd.DataFrame()
+        self, ca, period_str, observation_str,
+        medicao_df, combustivel_df=pd.DataFrame()
     ):
         self.ca = ca
         self.period_str = period_str
+        self.observation_str = observation_str
         self.medicao_df = medicao_df
         self.combustivel_df = combustivel_df
 
@@ -135,10 +137,7 @@ class CA:
                     self.iss,
                     self.liquido
                 ))
-            resumo.write(
-                '\n\nOBS: Se houve gastos adicionais como alimentação ou '
-                'borracharia, estes gastos ainda serão descontados.'
-            )
+            resumo.write('\n\nOBS: {}'.format(self.observation_str))
 
         silent('unix2dos {}'.format(filename), silence_stderr=True)
 
@@ -175,6 +174,7 @@ class MountSQL:
         self.unproductive = pd.DataFrame()
 
         self.period_str = dict(config['general'])['period_str']
+        self.observation_str = dict(config['general'])['observation_str']
         self.mysql = dict(config['mysql'])
         self.global_filters = dict(config['global_filters'])
         self.packs = {
@@ -338,11 +338,14 @@ class MountSQL:
             ]
             if not ca_combustivel.empty:
                 self.ca_list.append(
-                    CA(ca, self.period_str, ca_medicao, ca_combustivel)
+                    CA(
+                        ca, self.period_str, self.observation_str,
+                        ca_medicao, ca_combustivel
+                    )
                 )
             else:
                 self.ca_list.append(
-                    CA(ca, self.period_str, ca_medicao)
+                    CA(ca, self.period_str, self.observation_str, ca_medicao)
                 )
 
     def mount(self):

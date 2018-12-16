@@ -70,9 +70,10 @@ class MedicaoSQL(SQLDataHandlerABC):
 
         if materiais:
             print(
-                'The following materiais did not have their price updated:',
-                '\n\t{0}\n'.format('\n\t'.join(materiais)),
-                'In the handling of table {0}.'.format(config['table'])
+                'The following materiais did not have their price updated:\n',
+                '\n\t{0}\n\n'.format('\n\t'.join(materiais)),
+                'In the handling of table {0}.'.format(config['table']),
+                sep=''
             )
             cont = prompt_yes_no('Continue?', default='no')
             if not cont:

@@ -48,6 +48,10 @@ class MedicaoSQL(SQLDataHandlerABC):
         for column in config['not_null'].split(', '):
             self._df = self._df.loc[self._df[column].notnull()]
 
+        if self._df.empty:
+            print("Warning: no added added from table {}.".format(self.table))
+            return
+
         self._df['data'] = pd.to_datetime(self._df['data'])
 
         materiais = set(self._df['material'])
@@ -92,6 +96,10 @@ class CombustivelSQL(SQLDataHandlerABC):
     def prepare(self, config, packs):
         for column in config['not_null'].split(', '):
             self._df = self._df.loc[self._df[column].notnull()]
+
+        if self._df.empty:
+            print("Warning: no added added from table {}.".format(self.table))
+            return
 
         self._df['data'] = pd.to_datetime(self._df['data'])
 

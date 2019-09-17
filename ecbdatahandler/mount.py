@@ -388,7 +388,7 @@ class MountSQL:
         )
         for sheet in progress_bar:
             command = 'soffice --headless --convert-to ' \
-                'pdf:"impress_pdf_Export" --outdir "{}" ' \
+                'pdf:"calc_pdf_Export" --outdir "{}" ' \
                 '"{}/{}"'.format(folders['pdf'], folders['excel'], sheet)
             silent(command)
 

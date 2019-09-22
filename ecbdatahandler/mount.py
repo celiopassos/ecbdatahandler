@@ -45,7 +45,7 @@ class CA:
         medicao_df = medicao_df.rename(columns=rename_map)
         medicao_df = medicao_df[columns]
 
-        filename = '{}/{}.xlsx'.format(output_folder, self.ca)
+        filename = '{}/{0:03}.xlsx'.format(output_folder, self.ca)
 
         pandas.io.formats.excel.header_style = None
         writer = pd.ExcelWriter(filename, engine='xlsxwriter')

@@ -417,7 +417,9 @@ class MountSQL:
         total_ca = sum(stat['total_carga_bruta'] for stat in stats)
         total_combustivel_ca = sum(stat['total_combustivel'] for stat in stats)
 
-        liquido_df = self.medicao_df.set_index('cod1')[['ca']].drop_duplicates()
+        print(self.medicao_df.columns)
+        liquido_df = self.medicao_df[['cod1', 'ca']].drop_duplicates()
+        liquido_df = liquido_df.set_index('cod1')
         liquido_df = liquido_df.sort_index()
         liquido_df = liquido_df.rename(columns={'ca': 'CA'})
         liquido_df = liquido_df.set_index('CA', drop=False)

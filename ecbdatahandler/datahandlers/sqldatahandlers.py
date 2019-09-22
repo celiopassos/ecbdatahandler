@@ -116,7 +116,8 @@ class CombustivelSQL(SQLDataHandlerABC):
             print(
                 'The following combustiveis did not have their price updated:',
                 '\n\t{0}\n'.format('\n\t'.join(combustiveis)),
-                'In the handling of table {0}.'.format(config['table'])
+                'In the handling of table {0}.'.format(config['table']),
+                sep=''
             )
             cont = prompt_yes_no('Continue?', default='no')
             if not cont:

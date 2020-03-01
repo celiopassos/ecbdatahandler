@@ -44,16 +44,17 @@ class ExcelDataHandlerABC(ABC):
             engine.execute('DELETE FROM {0} WHERE {1}'.format(
                 self.tablename, conditions
             ))
+
+            # delete columns not in database
+            self.load_sql(engine)
+            self.df = self.df[[col for col in self._sql_df.columns if col in self.df.columns]]
+
         except Exception as e:
             cont = input(
                 'Received the following error: \n\n{0}\n\nContinue? '.format(e)
             )
             if cont not in ['Y', 'y', 'yes']:
                 exit()
-
-        # delete columns not in database
-        self.load_sql(engine)
-        self.df = self.df[[col for col in self._sql_df.columns if col in self.df.columns]]
 
         self.df.to_sql(
             self.tablename,
@@ -69,11 +70,12 @@ class MedicaoExcel(ExcelDataHandlerABC):
         rename_map = {col: to_sql_string(col) for col in self.df.columns.values}
         self.df = self.df.rename(columns=rename_map)
 
+        self.df['data'] = pd.to_datetime(self.df['data'], errors='coerce')
         self.df = self.df.set_index('data', drop=False)
         self.df = self.df.loc[config['daterange']]
         self.df = self.df.sort_index()
 
-        self.df['placa'] = self.df['placa'].apply(fix_placa)
+        # self.df['placa'] = self.df['placa'].apply(fix_placa)
         self.df['data'] = self.df['data'].apply(date_to_str)
 
 

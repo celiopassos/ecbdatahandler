@@ -39,17 +39,15 @@ class SQLDataHandlerABC(ABC):
 
 class MedicaoSQL(SQLDataHandlerABC):
 
-    def __init__(self, table, filters, unid):
+    def __init__(self, table, filters):
         super().__init__(table, filters)
-        self.unid = unid
-        self.price_column = unid + 'xpuxkm'
 
     def prepare(self, config, packs):
         for column in config['not_null'].split(', '):
             self._df = self._df.loc[self._df[column].notnull()]
 
         if self._df.empty:
-            print("Warning: no added added from table {}.".format(self.table))
+            print("Warning: no added from table {}.".format(self.table))
             return
 
         self._df['data'] = pd.to_datetime(self._df['data'])
@@ -58,8 +56,7 @@ class MedicaoSQL(SQLDataHandlerABC):
 
         for pack, price in config['price'].items():
             self._df.loc[
-                self._df['material'].isin(packs[pack]), self.price_column
-            ] = price
+                self._df['material'].isin(packs[pack]), 'valor_ton'] = price
             materiais.difference_update(set(packs[pack]))
 
         if None in materiais:
@@ -84,10 +81,11 @@ class MedicaoSQL(SQLDataHandlerABC):
                 sys.exit(1)
             print('')
 
-        self._df['valorizacao'] = (
-            pd.to_numeric(self._df[self.unid]) *
-            pd.to_numeric(self._df[self.price_column]) *
-            pd.to_numeric(self._df['acerto'])
+        self._df['valor_total'] = (
+            pd.to_numeric(self._df['cap']) *
+            pd.to_numeric(self._df['valor_ton']) *
+            pd.to_numeric(self._df['no_vg']) *
+            pd.to_numeric(self._df['dmt'])
         ).fillna(0.0).round(2)
 
 

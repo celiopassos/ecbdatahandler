@@ -29,7 +29,7 @@ class CA:
         self.medicao_df = medicao_df
         self.combustivel_df = combustivel_df
 
-        self.total_carga_bruta = medicao_df['valorizacao'].sum()
+        self.total_carga_bruta = medicao_df['valor_total'].sum()
         self.total_combustivel = \
             combustivel_df['total'].sum() if not combustivel_df.empty else 0.0
         self.descontado = self.total_carga_bruta - self.total_combustivel
@@ -38,7 +38,7 @@ class CA:
 
     def export_sheet(self, output_folder, columns, widths):
         medicao_df = self.medicao_df.copy()
-        medicao_df = medicao_df.sort_values(by=['data', 'km_inicial'])
+        medicao_df = medicao_df.sort_values(by=['data'])
         medicao_df['data'] = medicao_df['data'].apply(date_to_str_pt)
 
         rename_map = {to_sql_string(col): col for col in columns}
@@ -109,7 +109,7 @@ class CA:
             resumo.write('# {}\n\n### Período: {}.\n\n'.format(
                 self.ca, self.period_str
             ))
-            resumo.write('TOTAL VALOR CARGA BRUTA: R\\$ {:.2f}.\n\n'.format(
+            resumo.write('VALOR BRUTO TOTAL: R\\$ {:.2f}.\n\n'.format(
                 self.total_carga_bruta
             ))
             if not self.combustivel_df.empty:
@@ -201,8 +201,7 @@ class MountSQL:
             self.data_config[name] = name_config
             self.data_handlers[name] = MedicaoSQL(
                 table=name_config['table'],
-                filters=self.global_filters,
-                unid=name_config['type']
+                filters=self.global_filters
             )
 
         self.combustivel_names = get_config_split('combustivel', 'names')
@@ -239,7 +238,6 @@ class MountSQL:
             to_append_df = self.data_handlers[name].dataframe
 
             to_append_df = to_append_df.rename(columns=config['rename'])
-            to_append_df['unid'] = self.data_config[name]['type']
 
             self.medicao_df = self.medicao_df.append(to_append_df)
 
@@ -261,13 +259,11 @@ class MountSQL:
             self.ca_list.append(CA(ca, medicao))
 
     def _split_ca_com_combustivel(self):
-        medicao_cas = self.medicao_df.sort_values('cod1')['ca'].unique()
-        ca_placa_map = {
-            ca: set(self.medicao_df.loc[self.medicao_df['ca'] == ca, 'placa'])
-            for ca in medicao_cas
-        }
+        medicao_cas = self.medicao_df.sort_values('ca')['ca'].unique()
 
-        medicao_placas = self.medicao_df['placa'].unique()
+        ca_placa_map = {}
+
+        medicao_placas = set()
         combustivel_placas = self.combustivel_df['placa'].unique()
 
         missing_medicao = sorted(
@@ -410,16 +406,20 @@ class MountSQL:
             silent(command)
 
     def export_resumo_geral(self):
-        total = self.medicao_df['valorizacao'].sum()
+        total = self.medicao_df['valor_total'].sum()
         total_combustivel = self.combustivel_df['total'].sum()
 
         stats = [ca.stats() for ca in self.ca_list]
         total_ca = sum(stat['total_carga_bruta'] for stat in stats)
         total_combustivel_ca = sum(stat['total_combustivel'] for stat in stats)
 
-        liquido_df = self.medicao_df[['cod1', 'ca']].drop_duplicates()
-        liquido_df = liquido_df.set_index('cod1')
+        liquido_df = self.medicao_df[['ca']].drop_duplicates()
+        liquido_df['cod'] = liquido_df['ca'].apply(
+            func=lambda x: int(re.sub("[^0-9]", "", x))
+            )
+        liquido_df = liquido_df.set_index('cod')
         liquido_df = liquido_df.sort_index()
+
         liquido_df = liquido_df.rename(columns={'ca': 'CA'})
         liquido_df = liquido_df.set_index('CA', drop=False)
         liquido_df['Total a receber'] = np.nan

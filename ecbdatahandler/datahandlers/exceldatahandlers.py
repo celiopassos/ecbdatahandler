@@ -26,6 +26,12 @@ class ExcelDataHandlerABC(ABC):
         for tag, value in self.tags.items():
             self.df.insert(0, tag, value)
 
+    def load_sql(self, engine):
+        self._sql_df = pd.read_sql_query(
+            'SELECT * FROM {} LIMIT 1'.format(self.tablename),
+            engine
+        )
+
     @abstractmethod
     def prepare(self, config):
         pass
@@ -44,6 +50,10 @@ class ExcelDataHandlerABC(ABC):
             )
             if cont not in ['Y', 'y', 'yes']:
                 exit()
+
+        # delete columns not in database
+        self.load_sql(engine)
+        self.df = self.df[[col for col in self._sql_df.columns if col in self.df.columns]]
 
         self.df.to_sql(
             self.tablename,

@@ -331,7 +331,8 @@ class MountSQL:
             ]
             ca_combustivel = self.combustivel_df.loc[
                 self.combustivel_df['placa'].isin(ca_placa_map[ca])
-            ]
+            ] if ca in ca_placa_map else pd.DataFrame()
+
             if not ca_combustivel.empty:
                 self.ca_list.append(
                     CA(

@@ -18,9 +18,9 @@ class ExcelDataHandlerABC(ABC):
     def load(self):
         for pair in self.files:
             filename = pair[:pair.index(':')]
-            sheetname = pair[pair.index(':') + 1:]
+            sheet_name = pair[pair.index(':') + 1:]
             self.df = self.df.append(
-                pd.read_excel(filename, sheetname=sheetname)
+                pd.read_excel(filename, sheet_name=sheet_name)
             )
 
         for tag, value in self.tags.items():
@@ -71,9 +71,10 @@ class MedicaoExcel(ExcelDataHandlerABC):
         self.df = self.df.rename(columns=rename_map)
 
         self.df['data'] = pd.to_datetime(self.df['data'], errors='coerce')
-        self.df = self.df.set_index('data', drop=False)
-        self.df = self.df.loc[config['daterange']]
-        self.df = self.df.sort_index()
+        # self.df = self.df.set_index('data', drop=False)
+        # self.df = self.df.sort_index()
+        self.df = self.df.loc[self.df['data'].isin(config['daterange'])]
+        self.df = self.df.sort_values(by='data')
 
         # self.df['placa'] = self.df['placa'].apply(fix_placa)
         self.df['data'] = self.df['data'].apply(date_to_str)
